@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="19e2fcb0-57c1-4117-a62a-4f4d9023dd40" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="batchprocessFlow" doc:id="ac6ed8f1-5160-45b8-9916-30065af70ce4" >
+		<http:listener doc:name="Listener" doc:id="72f641cb-ef84-4352-a211-431bc54e286c" config-ref="HTTP_Listener_config" path="/bp">
+			<http:response >
+				<http:body ><![CDATA[#["Batch job completed"]]]></http:body>
+			</http:response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="d9d1dcca-5de4-44ad-a96b-58e6689ea7c2" message="Initial logger--&gt;Batchjob is being hear"/>
+	 <ee:transform doc:name="Transform Message" doc:id="e86479ac-726f-41e3-a9c9-849ee8e32688" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map{
+	id: $.id as Number,
+	name: $.name
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>  
+		<batch:job jobName="batchprocessBatch_Job" doc:id="8bd90478-45af-45da-83f6-22e82af81254" blockSize="2">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="45eb445d-9027-4a53-a1d0-478fdcf46a52" acceptExpression="#[(payload.id mod 2) == 0]">
+					<logger level="INFO" doc:name="Logger" doc:id="79367b06-d9a1-4366-8ae8-d4bd267b5817" message="Initial logger--&gt;Batchjob is being hear===&gt;#[payload]"/>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="4c591686-3cc5-4f3d-825b-61fff0a953f7" size="2">
+						<logger level="INFO" doc:name="Logger" doc:id="910324dc-e3d7-4063-8350-8258638bb45b" message="completed one batch step"/>
+					</batch:aggregator>
+				</batch:step>
+				<batch:step name="Batch_Step_Odd" doc:id="2def001f-d253-428d-8ea9-1a26e682caa7" acceptExpression="#[(payload.id mod 2) != 0]">
+					<logger level="INFO" doc:name="Odd Logger" doc:id="a50a2bd6-34ac-438a-af05-ee190cb938e5" message="Odd logger--&gt;Batchjob is being hear===&gt;#[payload]" />
+					<batch:aggregator doc:name="Odd_Batch Aggregator" doc:id="32685cac-9806-4df2-b9c2-c7691f2ef57a" size="2" >
+						<logger level="INFO" doc:name="Odd_Logger" doc:id="00bedd08-5234-4636-9e7e-1dd70068fe35" message="completed one batch step-Odd" />
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="6cea307c-25e5-43f3-a2ba-a513bc276073" message="Enter batch job process completed"/>
+			</batch:on-complete>
+		</batch:job> 
+	</flow>
+</mule>
