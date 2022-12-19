@@ -10,7 +10,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<http:listener-connection host="0.0.0.0" port="8081" />
 	</http:listener-config>
 	<flow name="batchprocessFlow" doc:id="ac6ed8f1-5160-45b8-9916-30065af70ce4" >
-		<http:listener doc:name="Listener" doc:id="72f641cb-ef84-4352-a211-431bc54e286c" config-ref="HTTP_Listener_config" path="/bp">
+		<http:listener doc:name="ListenerInfo" doc:id="72f641cb-ef84-4352-a211-431bc54e286c" config-ref="HTTP_Listener_config" path="/bp">
 			<http:response >
 				<http:body ><![CDATA[#["Batch job completed"]]]></http:body>
 			</http:response>
